@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "synthmarket"
+version = "0.1.0"
+description = "Synthetic financial time-series generation with recurrent WGAN-GP models."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "SynthMarket Contributors" }]
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.0",
+    "pandas>=1.5",
+    "numpy>=1.23",
+    "scipy>=1.9",
+    "yfinance>=0.2",
+    "matplotlib>=3.6",
+]
+
+[project.scripts]
+synthmarket-web = "synthmarket.web:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "ruff>=0.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["synthmarket*"]
+
+[tool.setuptools.package-data]
+synthmarket = ["static/*", "static/assets/*"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

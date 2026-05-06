@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SynthMarket</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero-shell" aria-label="SynthMarket research workspace">
+        <img class="hero-image" src="/static/assets/hero-market-glass.png" alt="" aria-hidden="true" />
+        <div class="hero-noise" aria-hidden="true"></div>
+        <div class="hero-content">
+          <header class="app-header">
+            <div class="brand">
+              <span id="healthDot" class="health-dot" aria-hidden="true"></span>
+              <div>
+                <h1>SynthMarket</h1>
+                <p id="runMessage">Research workspace ready.</p>
+              </div>
+            </div>
+            <div class="run-actions">
+              <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle dark mode">
+                <span id="themeIcon">Dark</span>
+              </button>
+              <div id="statusBadge" class="status-badge idle">Idle</div>
+              <button id="runButton" class="primary-button" form="runForm" type="submit">Run</button>
+            </div>
+          </header>
+
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <span class="hero-kicker">Local-first research workspace</span>
+              <h2>Build, generate, evaluate, and stress-test market strategies.</h2>
+              <p>
+                A focused workstation for correlated synthetic OHLCV, strategy design, robustness scoring, and clean
+                exports for real backtesting stacks.
+              </p>
+              <div class="hero-chip-row" aria-label="Core capabilities">
+                <span class="glass-chip">Correlated OHLCV</span>
+                <span class="glass-chip">Strategy Builder</span>
+                <span class="glass-chip">Risk Exports</span>
+              </div>
+            </div>
+
+            <aside class="mirror-console" aria-label="Research pipeline overview">
+              <div class="console-topline">
+                <span>Run Desk</span>
+                <strong>Ready</strong>
+              </div>
+              <div class="console-chart" aria-hidden="true">
+                <span style="--height: 36%"></span>
+                <span style="--height: 54%"></span>
+                <span style="--height: 42%"></span>
+                <span style="--height: 72%"></span>
+                <span style="--height: 61%"></span>
+                <span style="--height: 84%"></span>
+                <span style="--height: 58%"></span>
+                <span style="--height: 68%"></span>
+                <span style="--height: 46%"></span>
+                <span style="--height: 76%"></span>
+                <span style="--height: 64%"></span>
+                <span style="--height: 88%"></span>
+              </div>
+              <div class="console-rows">
+                <article>
+                  <span>Generator</span>
+                  <strong>Correlated WGAN</strong>
+                  <em>Multi-asset paths</em>
+                </article>
+                <article>
+                  <span>Evaluator</span>
+                  <strong>Stylized facts</strong>
+                  <em>KS, tails, clustering</em>
+                </article>
+                <article>
+                  <span>Backtest</span>
+                  <strong>Portfolio stress</strong>
+                  <em>Worst-path ranking</em>
+                </article>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="market-strip" aria-label="Research workflow summary">
+        <article>
+          <span>Generator</span>
+          <strong>Correlated WGAN</strong>
+        </article>
+        <article>
+          <span>Strategy</span>
+          <strong id="activeStrategyLabel">SMA Crossover</strong>
+        </article>
+        <article>
+          <span>Risk</span>
+          <strong>Worst Path</strong>
+        </article>
+        <article>
+          <span>Exports</span>
+          <strong>VectorBT + Backtrader</strong>
+        </article>
+      </section>
+
+      <nav class="tabs" aria-label="Workflow">
+        <button class="tab-button active" type="button" data-tab-target="dataTab">Data</button>
+        <button class="tab-button" type="button" data-tab-target="trainTab">Train</button>
+        <button class="tab-button" type="button" data-tab-target="generateTab">Generate</button>
+        <button class="tab-button" type="button" data-tab-target="strategyTab">Strategy</button>
+        <button class="tab-button" type="button" data-tab-target="evaluateTab">Evaluate</button>
+        <button class="tab-button" type="button" data-tab-target="backtestTab">Backtest</button>
+        <button class="tab-button" type="button" data-tab-target="projectsTab">Projects</button>
+        <button class="tab-button" type="button" data-tab-target="compareTab">Compare</button>
+      </nav>
+
+      <form id="runForm" class="content-grid">
+        <section class="workspace">
+          <section id="dataTab" class="tab-panel active">
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Data</h2>
+                <span>Market source</span>
+              </div>
+              <div class="preset-row">
+                <button type="button" class="preset-button" data-preset="fast">Fast Smoke</button>
+                <button type="button" class="preset-button" data-preset="balanced">Balanced</button>
+                <button type="button" class="preset-button" data-preset="quality">Higher Quality</button>
+              </div>
+              <div class="field-grid">
+                <label>
+                  <span>Tickers</span>
+                  <input name="ticker" value="SPY,QQQ" autocomplete="off" />
+                </label>
+                <label>
+                  <span>Period</span>
+                  <select name="period">
+                    <option value="1y">1y</option>
+                    <option value="2y">2y</option>
+                    <option value="5y" selected>5y</option>
+                    <option value="10y">10y</option>
+                    <option value="max">max</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Device</span>
+                  <select name="device">
+                    <option value="cpu" selected>CPU</option>
+                    <option value="auto">Auto</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Mode</span>
+                  <select name="generation_mode">
+                    <option value="correlated_multi_asset" selected>Correlated Multi-Asset</option>
+                    <option value="single_asset">Single Asset</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section id="trainTab" class="tab-panel">
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Train</h2>
+                <span>WGAN-GP controls</span>
+              </div>
+              <div class="field-grid">
+                <label>
+                  <span>Epochs</span>
+                  <input name="epochs" type="number" min="1" max="500" value="3" />
+                </label>
+                <label>
+                  <span>Window</span>
+                  <input name="window_size" type="number" min="8" max="512" value="60" />
+                </label>
+                <label>
+                  <span>Hidden</span>
+                  <input name="hidden_dim" type="number" min="8" max="512" value="32" />
+                </label>
+                <label>
+                  <span>Batch</span>
+                  <input name="batch_size" type="number" min="1" max="512" value="32" />
+                </label>
+                <label>
+                  <span>Critic Steps</span>
+                  <input name="n_critic" type="number" min="1" max="10" value="1" />
+                </label>
+                <label>
+                  <span>Noise</span>
+                  <input name="noise_dim" type="number" min="4" max="128" value="16" />
+                </label>
+                <label>
+                  <span>Layers</span>
+                  <input name="num_layers" type="number" min="1" max="4" value="1" />
+                </label>
+              </div>
+            </div>
+          </section>
+
+          <section id="generateTab" class="tab-panel">
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Generate</h2>
+                <span>Synthetic paths</span>
+              </div>
+              <div class="field-grid compact">
+                <label>
+                  <span>Paths</span>
+                  <input name="n_paths" type="number" min="1" max="5000" value="25" />
+                </label>
+                <label>
+                  <span>Length</span>
+                  <input name="length" type="number" min="5" max="2000" value="126" />
+                </label>
+              </div>
+            </div>
+            <div class="panel chart-panel">
+              <div class="panel-heading">
+                <h2>Close Paths</h2>
+                <span id="pathHint">Waiting</span>
+              </div>
+              <canvas id="pathChart" width="860" height="360"></canvas>
+            </div>
+          </section>
+
+          <section id="strategyTab" class="tab-panel">
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Strategy Builder</h2>
+                <span>No-code templates</span>
+              </div>
+              <div class="builder-grid">
+                <div>
+                  <label>
+                    <span>Strategy Name</span>
+                    <input id="strategyName" name="strategy_name" value="SMA Stress Test" autocomplete="off" />
+                  </label>
+                  <label>
+                    <span>Template</span>
+                    <select id="strategyTemplate" name="strategy_template"></select>
+                  </label>
+                  <div id="strategyParamGrid" class="field-grid compact"></div>
+                  <div class="builder-actions">
+                    <button id="saveStrategyButton" class="preset-button" type="button">Save Strategy</button>
+                    <span id="strategySaveStatus" class="inline-status">Not saved</span>
+                  </div>
+                </div>
+                <div>
+                  <div class="block-palette" id="templatePalette"></div>
+                  <div id="builderDropZone" class="builder-dropzone">
+                    <strong id="builderTemplateName">SMA Crossover</strong>
+                    <span id="builderTemplateDescription">Drag a template here or select one from the menu.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Advanced Python</h2>
+                <span>Staged placeholder</span>
+              </div>
+              <textarea
+                id="advancedCode"
+                name="advanced_code"
+                rows="6"
+                placeholder="Python strategy execution is disabled until sandboxing is added. You can store notes or draft code here."
+              ></textarea>
+            </div>
+          </section>
+
+          <section id="evaluateTab" class="tab-panel">
+            <div class="metric-grid">
+              <article class="metric-card panel">
+                <span>Status</span>
+                <strong id="metricStatus">-</strong>
+              </article>
+              <article class="metric-card panel">
+                <span>KS Statistic</span>
+                <strong id="metricKs">-</strong>
+              </article>
+              <article class="metric-card panel">
+                <span>Vol Ratio</span>
+                <strong id="metricVol">-</strong>
+              </article>
+              <article class="metric-card panel">
+                <span>Memorization</span>
+                <strong id="metricMemo">-</strong>
+              </article>
+            </div>
+            <div class="panel chart-panel">
+              <div class="panel-heading">
+                <h2>Return Distribution</h2>
+                <span>Real vs synthetic</span>
+              </div>
+              <canvas id="returnChart" width="860" height="360"></canvas>
+            </div>
+            <div id="warningList" class="warnings"></div>
+            <div id="plotGrid" class="plot-grid"></div>
+          </section>
+
+          <section id="backtestTab" class="tab-panel">
+            <section id="savedBacktestBar" class="saved-backtest-bar panel hidden" aria-live="polite">
+              <div class="saved-backtest-copy">
+                <span>Viewing saved backtest</span>
+                <strong id="savedBacktestLabel">-</strong>
+              </div>
+              <div class="saved-backtest-actions">
+                <button id="savedBackButton" class="inline-button" type="button">Back to saved runs</button>
+                <button id="savedPrevRunButton" class="inline-button" type="button">Previous</button>
+                <button id="savedNextRunButton" class="inline-button" type="button">Next</button>
+              </div>
+            </section>
+
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Portfolio</h2>
+                <span>Long only</span>
+              </div>
+              <div class="field-grid">
+                <label>
+                  <span>Initial Cash</span>
+                  <input name="initial_cash" type="number" min="100" step="100" value="10000" />
+                </label>
+                <label>
+                  <span>Fee BPS</span>
+                  <input name="fee_bps" type="number" min="0" step="0.1" value="1" />
+                </label>
+                <label>
+                  <span>Weights</span>
+                  <input name="portfolio_weights" value="" placeholder="Equal weight" />
+                </label>
+                <label>
+                  <span>Rebalance</span>
+                  <select name="rebalance_frequency">
+                    <option value="daily" selected>Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="none">None</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div class="metric-grid">
+              <article class="metric-card panel">
+                <span>Robustness</span>
+                <strong id="btRobustness">-</strong>
+              </article>
+              <article class="metric-card panel">
+                <span>Median Return</span>
+                <strong id="btMedian">-</strong>
+              </article>
+              <article class="metric-card panel">
+                <span>Profitable</span>
+                <strong id="btProfitable">-</strong>
+              </article>
+              <article class="metric-card panel">
+                <span>Worst DD</span>
+                <strong id="btDrawdown">-</strong>
+              </article>
+            </div>
+            <div class="chart-grid">
+              <article class="panel chart-panel">
+                <div class="panel-heading">
+                  <h2>Equity Curves</h2>
+                  <span>Generated paths</span>
+                </div>
+                <canvas id="equityChart" width="860" height="340"></canvas>
+              </article>
+              <article class="panel chart-panel">
+                <div class="panel-heading">
+                  <h2>Strategy Return</h2>
+                  <span>Path distribution</span>
+                </div>
+                <canvas id="strategyReturnChart" width="860" height="340"></canvas>
+              </article>
+              <article class="panel chart-panel wide">
+                <div class="panel-heading">
+                  <h2>Drawdown</h2>
+                  <span>Path distribution</span>
+                </div>
+                <canvas id="drawdownChart" width="860" height="320"></canvas>
+              </article>
+            </div>
+            <div class="panel table-panel">
+              <div class="panel-heading">
+                <h2>Worst Paths</h2>
+                <span>By total return</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Path</th>
+                      <th>Total Return</th>
+                      <th>Sharpe</th>
+                      <th>Max DD</th>
+                      <th>Trades</th>
+                      <th>Final Equity</th>
+                    </tr>
+                  </thead>
+                  <tbody id="worstPathRows">
+                    <tr>
+                      <td colspan="6">-</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section id="projectsTab" class="tab-panel">
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Saved Workspace</h2>
+                <span>Local SQLite</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Run</th>
+                      <th>Strategy</th>
+                      <th>Template</th>
+                      <th>Median Return</th>
+                      <th>Robustness</th>
+                      <th>Result</th>
+                    </tr>
+                  </thead>
+                  <tbody id="runRows">
+                    <tr><td colspan="6">No saved runs yet</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Strategy Library</h2>
+                <span id="strategyLibraryCount">0 saved</span>
+              </div>
+              <div id="strategyLibrary" class="library-grid"></div>
+            </div>
+          </section>
+
+          <section id="compareTab" class="tab-panel">
+            <div class="panel">
+              <div class="panel-heading">
+                <h2>Compare Runs</h2>
+                <span>Strategy robustness</span>
+              </div>
+              <div id="compareSelector" class="compare-selector"></div>
+              <div class="builder-actions">
+                <button id="compareButton" class="preset-button" type="button">Compare Selected</button>
+                <span id="compareStatus" class="inline-status">Select at least two runs</span>
+              </div>
+            </div>
+            <div class="panel table-panel">
+              <div class="panel-heading">
+                <h2>Comparison</h2>
+                <span>Ranked by robustness</span>
+              </div>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Run</th>
+                      <th>Strategy</th>
+                      <th>Median Return</th>
+                      <th>5th Percentile</th>
+                      <th>Worst DD</th>
+                      <th>Robustness</th>
+                    </tr>
+                  </thead>
+                  <tbody id="compareRows">
+                    <tr><td colspan="6">No comparison yet</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <aside class="side-rail">
+          <section class="panel progress-panel">
+            <div class="progress-copy">
+              <span id="stageText">No active run</span>
+              <strong id="elapsedText">0.00s</strong>
+            </div>
+            <div class="progress-track">
+              <div id="progressBar" class="progress-bar"></div>
+            </div>
+          </section>
+
+          <section class="panel outputs">
+            <div class="panel-heading">
+              <h2>Outputs</h2>
+              <span id="outputHint">No files yet</span>
+            </div>
+            <div id="downloadActions" class="actions"></div>
+          </section>
+        </aside>
+      </form>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
