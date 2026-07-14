@@ -123,8 +123,27 @@ const plotLabels = {
   path_preview: "Path Preview",
 };
 
-document.querySelectorAll(".tab-button").forEach((button) => {
+const tabButtons = [...document.querySelectorAll(".tab-button")];
+
+tabButtons.forEach((button, index) => {
   button.addEventListener("click", () => setActiveTab(button.dataset.tabTarget));
+  button.addEventListener("keydown", (event) => {
+    const keyOffsets = { ArrowRight: 1, ArrowLeft: -1 };
+    let nextIndex = index;
+    if (event.key in keyOffsets) {
+      nextIndex = (index + keyOffsets[event.key] + tabButtons.length) % tabButtons.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = tabButtons.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    const nextButton = tabButtons[nextIndex];
+    setActiveTab(nextButton.dataset.tabTarget);
+    nextButton.focus({ preventScroll: true });
+  });
 });
 
 document.querySelectorAll(".preset-button[data-preset]").forEach((button) => {
@@ -171,7 +190,7 @@ form.addEventListener("submit", async (event) => {
   selectedSavedRunId = null;
   hideSavedBacktestBar();
   setBusy(true);
-  setMessage("Starting run...");
+  setMessage("Starting run…");
   resetOutputs();
 
   try {
@@ -218,11 +237,16 @@ async function bootstrap() {
 }
 
 function setActiveTab(targetId) {
-  document.querySelectorAll(".tab-button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.tabTarget === targetId);
+  tabButtons.forEach((button) => {
+    const isActive = button.dataset.tabTarget === targetId;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+    button.tabIndex = isActive ? 0 : -1;
   });
   document.querySelectorAll(".tab-panel").forEach((panel) => {
-    panel.classList.toggle("active", panel.id === targetId);
+    const isActive = panel.id === targetId;
+    panel.classList.toggle("active", isActive);
+    panel.hidden = !isActive;
   });
   redrawCharts();
 }
@@ -275,7 +299,9 @@ function renderJob(job) {
   setMessage(job.message || job.stage);
   stageText.textContent = labelize(job.stage);
   elapsedText.textContent = `${Number(job.elapsed_seconds || 0).toFixed(2)}s`;
-  progressBar.style.width = `${Math.round((job.progress || 0) * 100)}%`;
+  const progress = Math.round((job.progress || 0) * 100);
+  progressBar.style.transform = `scaleX(${progress / 100})`;
+  progressBar.setAttribute("aria-valuenow", String(progress));
 
   if (job.metrics && Object.keys(job.metrics).length) {
     renderMetrics(job.metrics);
@@ -572,7 +598,7 @@ function setStrategyParam(name, value) {
 }
 
 async function saveCurrentStrategy() {
-  strategySaveStatus.textContent = "Saving...";
+  strategySaveStatus.textContent = "Saving…";
   try {
     const response = await fetch("/api/strategies", {
       method: "POST",
@@ -678,7 +704,7 @@ async function compareSelectedRuns() {
     compareStatus.textContent = "Select at least two runs";
     return;
   }
-  compareStatus.textContent = "Comparing...";
+  compareStatus.textContent = "Comparing…";
   const response = await fetch("/api/compare", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -841,7 +867,10 @@ function drawEmpty(canvas, text) {
   const height = canvas.clientHeight;
   ctx.clearRect(0, 0, width, height);
   ctx.fillStyle = themeColor("muted");
-  ctx.font = "14px system-ui";
+  const rootStyle = getComputedStyle(document.documentElement);
+  const fontSize = rootStyle.getPropertyValue("--text-sm").trim() || "0.8125rem";
+  const fontFamily = rootStyle.getPropertyValue("--font-body").trim() || "sans-serif";
+  ctx.font = `${fontSize} ${fontFamily}`;
   ctx.textAlign = "center";
   ctx.fillText(text, width / 2, height / 2);
 }
@@ -883,7 +912,8 @@ function drawAllEmpty(text = "Waiting for data") {
 
 function setBusy(isBusy) {
   runButton.disabled = isBusy;
-  runButton.textContent = isBusy ? "Running..." : "Run";
+  runButton.setAttribute("aria-busy", String(isBusy));
+  runButton.textContent = isBusy ? "Running…" : "Run model";
 }
 
 function setStatus(status) {
@@ -932,17 +962,14 @@ function labelize(value) {
 }
 
 function palette(index) {
-  const dark = document.documentElement.dataset.theme === "dark";
-  const colors = dark
-    ? ["#60a5fa", "#34d399", "#a78bfa", "#f87171", "#fbbf24", "#2dd4bf", "#c084fc", "#fb7185"]
-    : ["#2563eb", "#059669", "#7c3aed", "#dc2626", "#b45309", "#0f766e", "#9333ea", "#be123c"];
-  return colors[index % colors.length];
+  return themeColor(`series-${(index % 8) + 1}`);
 }
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem("synthmarket-theme", theme);
   themeIcon.textContent = theme === "dark" ? "Light" : "Dark";
+  themeToggle.setAttribute("aria-label", theme === "dark" ? "Switch to light mode" : "Switch to dark mode");
   window.dispatchEvent(new CustomEvent("synthmarket-theme-change", { detail: { theme } }));
 }
 
@@ -952,17 +979,13 @@ function themeColor(name) {
 
 function alphaColor(name, alpha) {
   const color = themeColor(name);
-  if (color.startsWith("#")) {
-    const hex = color.replace("#", "");
-    const bigint = Number.parseInt(hex.length === 3 ? hex.split("").map((char) => char + char).join("") : hex, 16);
-    const red = (bigint >> 16) & 255;
-    const green = (bigint >> 8) & 255;
-    const blue = bigint & 255;
-    return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+  if (color.startsWith("oklch(") && color.endsWith(")")) {
+    return `${color.slice(0, -1)} / ${alpha})`;
   }
   return color;
 }
 
 window.addEventListener("resize", redrawCharts);
 
+setActiveTab(document.querySelector(".tab-button.active")?.dataset.tabTarget || "dataTab");
 bootstrap();
