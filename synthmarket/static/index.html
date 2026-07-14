@@ -2,8 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>SynthMarket</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="icon" href="data:," />
+    <title>SynthMarket · Research Workspace</title>
     <link rel="stylesheet" href="/static/styles.css" />
   </head>
   <body>
@@ -17,30 +18,30 @@
               <span id="healthDot" class="health-dot" aria-hidden="true"></span>
               <div>
                 <h1>SynthMarket</h1>
-                <p id="runMessage">Research workspace ready.</p>
+                <p id="runMessage" role="status" aria-live="polite">Research workspace ready.</p>
               </div>
             </div>
             <div class="run-actions">
               <button id="themeToggle" class="icon-button" type="button" aria-label="Toggle dark mode">
                 <span id="themeIcon">Dark</span>
               </button>
-              <div id="statusBadge" class="status-badge idle">Idle</div>
-              <button id="runButton" class="primary-button" form="runForm" type="submit">Run</button>
+              <div id="statusBadge" class="status-badge idle" role="status" aria-live="polite">Idle</div>
+              <button id="runButton" class="primary-button" form="runForm" type="submit">Run model</button>
             </div>
           </header>
 
           <div class="hero-grid">
             <div class="hero-copy">
-              <span class="hero-kicker">Local-first research workspace</span>
-              <h2>Build, generate, evaluate, and stress-test market strategies.</h2>
+              <span class="hero-kicker">Local runtime · research workspace</span>
+              <h2>Configure the model. Inspect every path.</h2>
               <p>
-                A focused workstation for correlated synthetic OHLCV, strategy design, robustness scoring, and clean
-                exports for real backtesting stacks.
+                Generate correlated OHLCV, define a strategy, evaluate stylized facts, and stress-test the portfolio
+                from one reproducible run.
               </p>
               <div class="hero-chip-row" aria-label="Core capabilities">
                 <span class="glass-chip">Correlated OHLCV</span>
-                <span class="glass-chip">Strategy Builder</span>
-                <span class="glass-chip">Risk Exports</span>
+                <span class="glass-chip">Strategy specs</span>
+                <span class="glass-chip">Backtest exports</span>
               </div>
             </div>
 
@@ -104,20 +105,20 @@
         </article>
       </section>
 
-      <nav class="tabs" aria-label="Workflow">
-        <button class="tab-button active" type="button" data-tab-target="dataTab">Data</button>
-        <button class="tab-button" type="button" data-tab-target="trainTab">Train</button>
-        <button class="tab-button" type="button" data-tab-target="generateTab">Generate</button>
-        <button class="tab-button" type="button" data-tab-target="strategyTab">Strategy</button>
-        <button class="tab-button" type="button" data-tab-target="evaluateTab">Evaluate</button>
-        <button class="tab-button" type="button" data-tab-target="backtestTab">Backtest</button>
-        <button class="tab-button" type="button" data-tab-target="projectsTab">Projects</button>
-        <button class="tab-button" type="button" data-tab-target="compareTab">Compare</button>
+      <nav class="tabs" aria-label="Workflow" role="tablist">
+        <button class="tab-button active" id="dataTabButton" type="button" role="tab" aria-controls="dataTab" aria-selected="true" tabindex="0" data-tab-target="dataTab">Data</button>
+        <button class="tab-button" id="trainTabButton" type="button" role="tab" aria-controls="trainTab" aria-selected="false" tabindex="-1" data-tab-target="trainTab">Train</button>
+        <button class="tab-button" id="generateTabButton" type="button" role="tab" aria-controls="generateTab" aria-selected="false" tabindex="-1" data-tab-target="generateTab">Generate</button>
+        <button class="tab-button" id="strategyTabButton" type="button" role="tab" aria-controls="strategyTab" aria-selected="false" tabindex="-1" data-tab-target="strategyTab">Strategy</button>
+        <button class="tab-button" id="evaluateTabButton" type="button" role="tab" aria-controls="evaluateTab" aria-selected="false" tabindex="-1" data-tab-target="evaluateTab">Evaluate</button>
+        <button class="tab-button" id="backtestTabButton" type="button" role="tab" aria-controls="backtestTab" aria-selected="false" tabindex="-1" data-tab-target="backtestTab">Backtest</button>
+        <button class="tab-button" id="projectsTabButton" type="button" role="tab" aria-controls="projectsTab" aria-selected="false" tabindex="-1" data-tab-target="projectsTab">Projects</button>
+        <button class="tab-button" id="compareTabButton" type="button" role="tab" aria-controls="compareTab" aria-selected="false" tabindex="-1" data-tab-target="compareTab">Compare</button>
       </nav>
 
       <form id="runForm" class="content-grid">
         <section class="workspace">
-          <section id="dataTab" class="tab-panel active">
+          <section id="dataTab" class="tab-panel active" role="tabpanel" aria-labelledby="dataTabButton">
             <div class="panel">
               <div class="panel-heading">
                 <h2>Data</h2>
@@ -161,7 +162,7 @@
             </div>
           </section>
 
-          <section id="trainTab" class="tab-panel">
+          <section id="trainTab" class="tab-panel" role="tabpanel" aria-labelledby="trainTabButton">
             <div class="panel">
               <div class="panel-heading">
                 <h2>Train</h2>
@@ -200,7 +201,7 @@
             </div>
           </section>
 
-          <section id="generateTab" class="tab-panel">
+          <section id="generateTab" class="tab-panel" role="tabpanel" aria-labelledby="generateTabButton">
             <div class="panel">
               <div class="panel-heading">
                 <h2>Generate</h2>
@@ -222,11 +223,11 @@
                 <h2>Close Paths</h2>
                 <span id="pathHint">Waiting</span>
               </div>
-              <canvas id="pathChart" width="860" height="360"></canvas>
+              <canvas id="pathChart" width="860" height="360" aria-label="Synthetic and real close price paths"></canvas>
             </div>
           </section>
 
-          <section id="strategyTab" class="tab-panel">
+          <section id="strategyTab" class="tab-panel" role="tabpanel" aria-labelledby="strategyTabButton">
             <div class="panel">
               <div class="panel-heading">
                 <h2>Strategy Builder</h2>
@@ -271,7 +272,7 @@
             </div>
           </section>
 
-          <section id="evaluateTab" class="tab-panel">
+          <section id="evaluateTab" class="tab-panel" role="tabpanel" aria-labelledby="evaluateTabButton">
             <div class="metric-grid">
               <article class="metric-card panel">
                 <span>Status</span>
@@ -295,13 +296,13 @@
                 <h2>Return Distribution</h2>
                 <span>Real vs synthetic</span>
               </div>
-              <canvas id="returnChart" width="860" height="360"></canvas>
+              <canvas id="returnChart" width="860" height="360" aria-label="Real and synthetic return distributions"></canvas>
             </div>
             <div id="warningList" class="warnings"></div>
             <div id="plotGrid" class="plot-grid"></div>
           </section>
 
-          <section id="backtestTab" class="tab-panel">
+          <section id="backtestTab" class="tab-panel" role="tabpanel" aria-labelledby="backtestTabButton">
             <section id="savedBacktestBar" class="saved-backtest-bar panel hidden" aria-live="polite">
               <div class="saved-backtest-copy">
                 <span>Viewing saved backtest</span>
@@ -367,21 +368,21 @@
                   <h2>Equity Curves</h2>
                   <span>Generated paths</span>
                 </div>
-                <canvas id="equityChart" width="860" height="340"></canvas>
+                <canvas id="equityChart" width="860" height="340" aria-label="Generated path equity curves"></canvas>
               </article>
               <article class="panel chart-panel">
                 <div class="panel-heading">
                   <h2>Strategy Return</h2>
                   <span>Path distribution</span>
                 </div>
-                <canvas id="strategyReturnChart" width="860" height="340"></canvas>
+                <canvas id="strategyReturnChart" width="860" height="340" aria-label="Strategy return distribution"></canvas>
               </article>
               <article class="panel chart-panel wide">
                 <div class="panel-heading">
                   <h2>Drawdown</h2>
                   <span>Path distribution</span>
                 </div>
-                <canvas id="drawdownChart" width="860" height="320"></canvas>
+                <canvas id="drawdownChart" width="860" height="320" aria-label="Strategy drawdown distribution"></canvas>
               </article>
             </div>
             <div class="panel table-panel">
@@ -411,7 +412,7 @@
             </div>
           </section>
 
-          <section id="projectsTab" class="tab-panel">
+          <section id="projectsTab" class="tab-panel" role="tabpanel" aria-labelledby="projectsTabButton">
             <div class="panel">
               <div class="panel-heading">
                 <h2>Saved Workspace</h2>
@@ -444,7 +445,7 @@
             </div>
           </section>
 
-          <section id="compareTab" class="tab-panel">
+          <section id="compareTab" class="tab-panel" role="tabpanel" aria-labelledby="compareTabButton">
             <div class="panel">
               <div class="panel-heading">
                 <h2>Compare Runs</h2>
@@ -489,7 +490,7 @@
               <strong id="elapsedText">0.00s</strong>
             </div>
             <div class="progress-track">
-              <div id="progressBar" class="progress-bar"></div>
+              <div id="progressBar" class="progress-bar" role="progressbar" aria-label="Run progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
             </div>
           </section>
 
@@ -502,6 +503,11 @@
           </section>
         </aside>
       </form>
+
+      <footer class="app-footer">
+        <span>SynthMarket · local research environment</span>
+        <span>Generated data requires independent validation</span>
+      </footer>
     </main>
 
     <script src="/static/app.js"></script>

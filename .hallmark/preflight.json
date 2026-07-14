@@ -1,0 +1,15 @@
+{
+  "date": "2026-07-14",
+  "framework": "vanilla HTML, CSS, and JavaScript",
+  "font_stack": "local system sans plus system mono; no external font source",
+  "palette": "light and dark CSS custom properties",
+  "motion": "motion-cut; no animation library",
+  "spacing": "migrated to a 4-point token scale",
+  "preserve": [
+    "plain frontend architecture",
+    "existing API contracts",
+    "localStorage theme persistence",
+    "canvas redraw after theme changes",
+    "progress and output side rail"
+  ]
+}
