@@ -18,7 +18,11 @@ class TemporalSplit:
 
     @property
     def sizes(self) -> dict[str, int]:
-        return {"train": len(self.train), "validation": len(self.validation), "test": len(self.test)}
+        return {
+            "train": len(self.train),
+            "validation": len(self.validation),
+            "test": len(self.test),
+        }
 
 
 def chronological_split(
@@ -47,7 +51,13 @@ def chronological_split(
             raise ValueError("cutoff leaves fewer than min_train_rows in training data.")
         validation_size = max(
             1,
-            int(round(len(remaining) * validation_fraction / (validation_fraction + test_fraction))),
+            int(
+                round(
+                    len(remaining)
+                    * validation_fraction
+                    / (validation_fraction + test_fraction)
+                )
+            ),
         )
         validation = remaining.iloc[:validation_size]
         test = remaining.iloc[validation_size:]
