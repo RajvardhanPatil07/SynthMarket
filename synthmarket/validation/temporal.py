@@ -45,7 +45,10 @@ def chronological_split(
         remaining = ordered.loc[ordered.index >= cutoff_ts]
         if len(train) < min_train_rows:
             raise ValueError("cutoff leaves fewer than min_train_rows in training data.")
-        validation_size = max(1, int(round(len(remaining) * validation_fraction / (validation_fraction + test_fraction))))
+        validation_size = max(
+            1,
+            int(round(len(remaining) * validation_fraction / (validation_fraction + test_fraction))),
+        )
         validation = remaining.iloc[:validation_size]
         test = remaining.iloc[validation_size:]
     else:
