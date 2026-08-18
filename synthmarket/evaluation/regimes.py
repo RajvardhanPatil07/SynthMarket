@@ -32,7 +32,7 @@ def transition_matrix(labels: pd.Series) -> pd.DataFrame:
         raise ValueError("At least two regime labels are required.")
     states = sorted(set(sequence))
     counts = pd.DataFrame(0.0, index=states, columns=states)
-    for current, nxt in zip(sequence, sequence[1:]):
+    for current, nxt in zip(sequence, sequence[1:], strict=False):
         counts.loc[current, nxt] += 1.0
     totals = counts.sum(axis=1).replace(0.0, np.nan)
     return counts.div(totals, axis=0).fillna(0.0)
