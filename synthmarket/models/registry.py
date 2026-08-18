@@ -45,7 +45,7 @@ def list_models() -> list[dict[str, Any]]:
 
 def _register_baseline_wgan() -> None:
     try:
-        from .wgan import WGANSequential
+        from .wgan import WGANConfig, WGANSequential
     except ImportError:
         return
 
@@ -55,7 +55,11 @@ def _register_baseline_wgan() -> None:
         family="wasserstein-gan",
         capabilities=("single_asset", "multi_asset", "sequence_generation"),
     )
-    register_model("wgan-gp", metadata, lambda config=None, **kwargs: WGANSequential(config, **kwargs) if config is not None else WGANSequential(**kwargs))
+
+    def factory(config: WGANConfig | None = None) -> WGANSequential:
+        return WGANSequential(config or WGANConfig())
+
+    register_model("wgan-gp", metadata, factory)
 
 
 _register_baseline_wgan()
