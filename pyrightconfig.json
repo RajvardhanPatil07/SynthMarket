@@ -1,0 +1,6 @@
+{
+  "include": ["synthmarket", "tests"],
+  "exclude": ["synthmarket/static"],
+  "pythonVersion": "3.10",
+  "typeCheckingMode": "basic"
+}
