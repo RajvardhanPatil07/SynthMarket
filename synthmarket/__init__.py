@@ -28,6 +28,7 @@ __all__ = [
     "MultiAssetSyntheticMarketGenerator",
     "PortfolioSpec",
     "SMACrossoverConfig",
+    "StrategySpec",
     "SyntheticModel",
     "SyntheticMarketGenerator",
     "TemporalSplit",
