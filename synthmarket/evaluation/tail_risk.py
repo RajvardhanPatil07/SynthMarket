@@ -41,7 +41,7 @@ def maximum_drawdown(prices: pd.Series) -> float:
         return float("nan")
     running_max = np.maximum.accumulate(values)
     drawdowns = 1.0 - (values / np.maximum(running_max, 1e-12))
-    return float(np.max(drawdowns))
+    return float(np.round(np.max(drawdowns), 12))
 
 
 def tail_risk_report(returns: np.ndarray, confidence_levels: tuple[float, ...] = (0.95, 0.99)) -> dict[str, Any]:
