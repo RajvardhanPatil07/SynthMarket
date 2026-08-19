@@ -21,7 +21,8 @@ def _load_frame(path: str) -> pd.DataFrame:
 
 def _close_series(frame: pd.DataFrame, column: str) -> pd.Series:
     if column not in frame.columns:
-        raise ValueError(f"Column '{column}' not found. Available columns: {', '.join(map(str, frame.columns))}")
+        available = ", ".join(map(str, frame.columns))
+        raise ValueError(f"Column '{column}' not found. Available columns: {available}")
     close = pd.to_numeric(frame[column], errors="coerce").dropna()
     if close.empty or (close <= 0).any():
         raise ValueError(f"Column '{column}' must contain positive numeric prices.")
@@ -39,7 +40,10 @@ def _handle_evaluate(args: argparse.Namespace) -> dict[str, object]:
     from .evaluation.tail_risk import returns_from_close, tail_risk_report
 
     close = _close_series(_load_frame(args.csv), args.close_column)
-    return {"tail_risk": tail_risk_report(returns_from_close(close)), "regimes": regime_report(close)}
+    return {
+        "tail_risk": tail_risk_report(returns_from_close(close)),
+        "regimes": regime_report(close),
+    }
 
 
 def _handle_split(args: argparse.Namespace) -> dict[str, object]:
@@ -53,9 +57,17 @@ def _handle_split(args: argparse.Namespace) -> dict[str, object]:
     )
 
     def span(part: pd.DataFrame) -> dict[str, object]:
-        return {"rows": len(part), "start": str(part.index.min()), "end": str(part.index.max())}
+        return {
+            "rows": len(part),
+            "start": str(part.index.min()),
+            "end": str(part.index.max()),
+        }
 
-    return {"train": span(split.train), "validation": span(split.validation), "test": span(split.test)}
+    return {
+        "train": span(split.train),
+        "validation": span(split.validation),
+        "test": span(split.test),
+    }
 
 
 def _handle_validate(args: argparse.Namespace) -> dict[str, object]:
@@ -72,18 +84,17 @@ def _handle_generate(args: argparse.Namespace) -> dict[str, object]:
     returns = returns_from_close(close)
     if len(returns) < 30:
         raise ValueError("At least 30 historical returns are required to fit a baseline model.")
-    model = get_model(args.model)
     if args.model not in {"block-bootstrap", "garch"}:
-        raise ValueError(f"Model '{args.model}' is not supported by this fit/generate CLI workflow.")
+        raise ValueError(f"Model '{args.model}' is not supported by this CLI workflow.")
+    model = get_model(args.model)
     model.fit(returns.reshape(1, -1, 1))
     generated = model.generate(args.paths, args.length, seed=args.seed)
     last_close = float(close.iloc[-1])
     prices = last_close * np.exp(np.cumsum(generated[:, :, 0], axis=1))
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    pd.DataFrame(prices.T, columns=[f"path_{index + 1}" for index in range(args.paths)]).to_csv(
-        output, index_label="step"
-    )
+    columns = [f"path_{index + 1}" for index in range(args.paths)]
+    pd.DataFrame(prices.T, columns=columns).to_csv(output, index_label="step")
     return {
         "model": args.model,
         "paths": args.paths,
@@ -95,29 +106,47 @@ def _handle_generate(args: argparse.Namespace) -> dict[str, object]:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="synthmarket", description="SynthMarket research workflows.")
+    parser = argparse.ArgumentParser(
+        prog="synthmarket",
+        description="SynthMarket research workflows.",
+    )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    models_parser = subparsers.add_parser("models", help="List registered model backends.")
+    models_parser = subparsers.add_parser(
+        "models",
+        help="List registered model backends.",
+    )
     models_parser.set_defaults(handler=_handle_models)
 
-    evaluate_parser = subparsers.add_parser("evaluate", help="Tail-risk and regime report for a price CSV.")
+    evaluate_parser = subparsers.add_parser(
+        "evaluate",
+        help="Tail-risk and regime report for a price CSV.",
+    )
     evaluate_parser.add_argument("--csv", required=True)
     evaluate_parser.add_argument("--close-column", default="Close")
     evaluate_parser.set_defaults(handler=_handle_evaluate)
 
-    split_parser = subparsers.add_parser("split", help="Leakage-safe chronological split summary.")
+    split_parser = subparsers.add_parser(
+        "split",
+        help="Leakage-safe chronological split summary.",
+    )
     split_parser.add_argument("--csv", required=True)
     split_parser.add_argument("--validation", type=float, default=0.15)
     split_parser.add_argument("--test", type=float, default=0.15)
     split_parser.add_argument("--min-train-rows", type=int, default=100)
     split_parser.set_defaults(handler=_handle_split)
 
-    validate_parser = subparsers.add_parser("validate", help="Structural OHLCV constraint validation.")
+    validate_parser = subparsers.add_parser(
+        "validate",
+        help="Structural OHLCV constraint validation.",
+    )
     validate_parser.add_argument("--csv", required=True)
     validate_parser.set_defaults(handler=_handle_validate)
 
-    generate_parser = subparsers.add_parser("generate", help="Generate synthetic price paths with a baseline model.")
+    generate_parser = subparsers.add_parser(
+        "generate",
+        help="Generate synthetic price paths with a baseline model.",
+    )
     generate_parser.add_argument("--csv", required=True)
     generate_parser.add_argument("--close-column", default="Close")
     generate_parser.add_argument("--model", default="block-bootstrap")

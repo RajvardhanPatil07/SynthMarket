@@ -22,17 +22,25 @@ except ImportError:  # pragma: no cover - optional dependency
     Field = None  # type: ignore[assignment,misc]
 
 
-def create_app() -> Any:
-    """Create the HTTP API application."""
-    if FastAPI is None:
-        raise ImportError("Install the API extra with: pip install 'synthmarket[api]'")
+if FastAPI is not None:
 
     class GenerateRequest(BaseModel):
+        """Validated request for statistical-baseline path generation."""
+
         close: list[float] = Field(min_length=31)
         model: str = "block-bootstrap"
         n_paths: int = Field(default=10, ge=1, le=MAX_PATHS)
         horizon: int = Field(default=252, ge=2, le=MAX_HORIZON)
         seed: int | None = None
+
+else:
+    GenerateRequest = None  # type: ignore[assignment,misc]
+
+
+def create_app() -> Any:
+    """Create the HTTP API application."""
+    if FastAPI is None or GenerateRequest is None:
+        raise ImportError("Install the API extra with: pip install 'synthmarket[api]'")
 
     application = FastAPI(title="SynthMarket API", version=API_VERSION)
 
@@ -47,14 +55,19 @@ def create_app() -> Any:
     @application.post("/generate")
     def generate(request: GenerateRequest) -> dict[str, Any]:
         if request.model not in {"block-bootstrap", "garch"}:
-            raise HTTPException(status_code=404, detail=f"Unknown or unsupported model '{request.model}'.")
+            detail = f"Unknown or unsupported model '{request.model}'."
+            raise HTTPException(status_code=404, detail=detail)
         close = np.asarray(request.close, dtype=float)
         if not np.isfinite(close).all() or np.any(close <= 0.0):
             raise HTTPException(status_code=422, detail="close must contain finite positive prices.")
         returns = np.diff(np.log(close))
         model = get_model(request.model)
         model.fit(returns.reshape(1, -1, 1))
-        generated = model.generate(request.n_paths, request.horizon, seed=request.seed)[:, :, 0]
+        generated = model.generate(
+            request.n_paths,
+            request.horizon,
+            seed=request.seed,
+        )[:, :, 0]
         prices = close[-1] * np.exp(np.cumsum(generated, axis=1))
         return {
             "model": request.model,

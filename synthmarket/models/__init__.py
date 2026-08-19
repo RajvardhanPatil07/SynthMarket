@@ -1,7 +1,7 @@
 """Model architectures and statistical baselines used by SynthMarket."""
 
 from .base import ModelMetadata, SyntheticModel
-from .baselines import BlockBootstrapModel, GaussianGarchModel, GarchParameters
+from .baselines import BlockBootstrapModel, GarchParameters, GaussianGarchModel
 from .registry import get_model, list_models, register_model
 
 try:
@@ -13,8 +13,8 @@ except ImportError:  # pragma: no cover - torch is an optional import for baseli
 
 __all__ = [
     "BlockBootstrapModel",
-    "GaussianGarchModel",
     "GarchParameters",
+    "GaussianGarchModel",
     "ModelMetadata",
     "SyntheticModel",
     "RecurrentCritic",

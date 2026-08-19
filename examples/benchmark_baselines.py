@@ -7,7 +7,11 @@ import argparse
 import numpy as np
 import pandas as pd
 
-from synthmarket.evaluation.tail_risk import expected_shortfall, returns_from_close, value_at_risk
+from synthmarket.evaluation.tail_risk import (
+    expected_shortfall,
+    returns_from_close,
+    value_at_risk,
+)
 from synthmarket.models.registry import get_model
 
 
@@ -28,7 +32,9 @@ def _squared_autocorrelation(returns: np.ndarray, lag: int) -> float:
     left = squared[:-lag] - squared[:-lag].mean()
     right = squared[lag:] - squared[lag:].mean()
     denominator = np.sqrt(np.sum(left**2) * np.sum(right**2))
-    return float(np.sum(left * right) / denominator) if denominator > 0 else 0.0
+    if denominator == 0:
+        return 0.0
+    return float(np.sum(left * right) / denominator)
 
 
 def _describe(returns: np.ndarray) -> dict[str, float]:
@@ -59,14 +65,16 @@ def main() -> None:
     for name in ("block-bootstrap", "garch"):
         model = get_model(name)
         model.fit(train.reshape(1, -1, 1))
-        synthetic = model.generate(args.paths, len(test), seed=args.seed)[:, :, 0].ravel()
+        generated = model.generate(args.paths, len(test), seed=args.seed)
+        synthetic = generated[:, :, 0].ravel()
         rows.append((name, _describe(synthetic)))
 
     metrics = list(rows[0][1])
     print("| source | " + " | ".join(metrics) + " |")
     print("|" + "---|" * (len(metrics) + 1))
     for name, statistics in rows:
-        print(f"| {name} | " + " | ".join(f"{statistics[metric]:.5f}" for metric in metrics) + " |")
+        values = " | ".join(f"{statistics[metric]:.5f}" for metric in metrics)
+        print(f"| {name} | {values} |")
 
 
 if __name__ == "__main__":
