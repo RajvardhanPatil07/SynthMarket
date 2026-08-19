@@ -1,0 +1,13 @@
+# Render.com deployment for the SynthMarket API/web service.
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: synthmarket-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    healthCheckPath: /health
+    autoDeploy: true
