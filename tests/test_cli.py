@@ -12,7 +12,13 @@ def _csv(tmp_path):
     close = 100 * np.exp(np.cumsum(rng.normal(0.0003, 0.012, len(index))))
     path = tmp_path / "prices.csv"
     pd.DataFrame(
-        {"Open": close, "High": close * 1.01, "Low": close * 0.99, "Close": close, "Volume": 1e6},
+        {
+            "Open": close,
+            "High": close * 1.01,
+            "Low": close * 0.99,
+            "Close": close,
+            "Volume": 1e6,
+        },
         index=index,
     ).to_csv(path)
     return path
@@ -27,7 +33,20 @@ def test_models_lists_baselines(capsys) -> None:
 def test_generate_evaluate_split_and_validate(tmp_path, capsys) -> None:
     source = _csv(tmp_path)
     output = tmp_path / "synthetic.csv"
-    assert main(["generate", "--csv", str(source), "--paths", "3", "--length", "40", "--seed", "1", "--output", str(output)]) == 0
+    generate_args = [
+        "generate",
+        "--csv",
+        str(source),
+        "--paths",
+        "3",
+        "--length",
+        "40",
+        "--seed",
+        "1",
+        "--output",
+        str(output),
+    ]
+    assert main(generate_args) == 0
     assert json.loads(capsys.readouterr().out)["paths"] == 3
     generated = pd.read_csv(output, index_col=0)
     assert generated.shape == (40, 3)
@@ -43,5 +62,6 @@ def test_generate_evaluate_split_and_validate(tmp_path, capsys) -> None:
 
 
 def test_unknown_model_is_a_clean_error(tmp_path, capsys) -> None:
-    assert main(["generate", "--csv", str(_csv(tmp_path)), "--model", "missing"]) == 1
+    arguments = ["generate", "--csv", str(_csv(tmp_path)), "--model", "missing"]
+    assert main(arguments) == 1
     assert "error:" in capsys.readouterr().err
