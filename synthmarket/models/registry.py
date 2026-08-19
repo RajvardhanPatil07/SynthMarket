@@ -11,7 +11,6 @@ _REGISTRY: dict[str, tuple[ModelMetadata, Callable[..., Any]]] = {}
 
 def register_model(name: str, metadata: ModelMetadata, factory: Callable[..., Any]) -> None:
     """Register a named model factory."""
-
     key = name.strip().lower()
     if not key:
         raise ValueError("Model name must not be empty.")
@@ -22,7 +21,6 @@ def register_model(name: str, metadata: ModelMetadata, factory: Callable[..., An
 
 def get_model(name: str, **kwargs: Any) -> Any:
     """Instantiate a registered model."""
-
     key = name.strip().lower()
     if key not in _REGISTRY:
         raise KeyError(f"Unknown model '{name}'. Available models: {', '.join(list(_REGISTRY)) or 'none'}")
@@ -31,7 +29,6 @@ def get_model(name: str, **kwargs: Any) -> Any:
 
 def list_models() -> list[dict[str, Any]]:
     """Return serializable metadata for all registered models."""
-
     return [
         {
             "name": metadata.name,
@@ -62,4 +59,12 @@ def _register_baseline_wgan() -> None:
     register_model("wgan-gp", metadata, factory)
 
 
+def _register_statistical_baselines() -> None:
+    from .baselines import BlockBootstrapModel, GaussianGarchModel
+
+    register_model("block-bootstrap", BlockBootstrapModel.metadata, BlockBootstrapModel)
+    register_model("garch", GaussianGarchModel.metadata, GaussianGarchModel)
+
+
 _register_baseline_wgan()
+_register_statistical_baselines()

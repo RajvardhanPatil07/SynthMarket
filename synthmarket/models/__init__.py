@@ -1,10 +1,20 @@
-"""Neural architectures used by SynthMarket."""
+"""Model architectures and statistical baselines used by SynthMarket."""
 
 from .base import ModelMetadata, SyntheticModel
+from .baselines import BlockBootstrapModel, GarchParameters, GaussianGarchModel
 from .registry import get_model, list_models, register_model
-from .wgan import RecurrentCritic, RecurrentGenerator, WGANSequential
+
+try:
+    from .wgan import RecurrentCritic, RecurrentGenerator, WGANSequential
+except ImportError:  # pragma: no cover - torch is an optional import for baseline-only use
+    RecurrentCritic = None  # type: ignore[assignment,misc]
+    RecurrentGenerator = None  # type: ignore[assignment,misc]
+    WGANSequential = None  # type: ignore[assignment,misc]
 
 __all__ = [
+    "BlockBootstrapModel",
+    "GarchParameters",
+    "GaussianGarchModel",
     "ModelMetadata",
     "SyntheticModel",
     "RecurrentCritic",
