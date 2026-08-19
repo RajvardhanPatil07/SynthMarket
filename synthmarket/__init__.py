@@ -15,17 +15,30 @@ from .evaluation import (
 )
 from .experiments.manifest import ExperimentManifest, current_git_commit
 from .generator import MultiAssetSyntheticMarketGenerator, SyntheticMarketGenerator
-from .models import ModelMetadata, SyntheticModel, get_model, list_models, register_model
+from .models import (
+    BlockBootstrapModel,
+    GaussianGarchModel,
+    ModelMetadata,
+    SyntheticModel,
+    get_model,
+    list_models,
+    register_model,
+)
 from .strategies import StrategySpec, list_strategy_templates, make_strategy_spec
 from .trainer import TrainingArtifact, TrainingConfig, TrainingHistory, WGANTrainer
-from .validation.temporal import TemporalSplit, chronological_split
+from .validation import OhlcValidationReport, TemporalSplit, chronological_split, validate_ohlcv
+
+__version__ = "0.3.0"
 
 __all__ = [
     "BacktestReport",
+    "BlockBootstrapModel",
     "DatasetManifest",
     "ExperimentManifest",
+    "GaussianGarchModel",
     "ModelMetadata",
     "MultiAssetSyntheticMarketGenerator",
+    "OhlcValidationReport",
     "PortfolioSpec",
     "SMACrossoverConfig",
     "StrategySpec",
@@ -55,5 +68,6 @@ __all__ = [
     "run_sma_crossover",
     "tail_risk_report",
     "transition_matrix",
+    "validate_ohlcv",
     "value_at_risk",
 ]
