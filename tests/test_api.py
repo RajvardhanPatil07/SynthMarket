@@ -1,10 +1,11 @@
 import pytest
 
-fastapi = pytest.importorskip("fastapi")
-pytest.importorskip("httpx")
-from fastapi.testclient import TestClient
+try:
+    from fastapi.testclient import TestClient
 
-from synthmarket.api import create_app
+    from synthmarket.api import create_app
+except ImportError:
+    pytest.skip("FastAPI test dependencies are not installed", allow_module_level=True)
 
 
 def test_health_models_and_generation() -> None:
@@ -19,7 +20,13 @@ def test_health_models_and_generation() -> None:
 
     response = client.post(
         "/generate",
-        json={"close": [100 + index * 0.1 for index in range(80)], "model": "garch", "n_paths": 2, "horizon": 30, "seed": 7},
+        json={
+            "close": [100 + index * 0.1 for index in range(80)],
+            "model": "garch",
+            "n_paths": 2,
+            "horizon": 30,
+            "seed": 7,
+        },
     )
     assert response.status_code == 200
     paths = response.json()["paths"]
@@ -32,6 +39,11 @@ def test_unknown_model_returns_404() -> None:
     client = TestClient(create_app())
     response = client.post(
         "/generate",
-        json={"close": [100 + index * 0.1 for index in range(40)], "model": "missing", "n_paths": 1, "horizon": 2},
+        json={
+            "close": [100 + index * 0.1 for index in range(40)],
+            "model": "missing",
+            "n_paths": 1,
+            "horizon": 2,
+        },
     )
     assert response.status_code == 404

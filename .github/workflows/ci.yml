@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "agent/**"]
+    branches: [main, "agent/**", "improvements/**"]
   pull_request:
     branches: [main]
 
@@ -23,11 +23,14 @@ jobs:
       - name: Install package
         run: python -m pip install -U pip && python -m pip install -e ".[dev]"
       - name: Lint
-        run: ruff check .
-      - name: Tests
-        run: pytest
+        run: ruff check . --no-cache
+      - name: Type check
+        run: mypy synthmarket
+        continue-on-error: true
+      - name: Tests with coverage
+        run: python -m pytest -p no:cacheprovider --cov=synthmarket --cov-report=term-missing
       - name: Compile
-        run: python -m compileall synthmarket tests
+        run: python -m compileall synthmarket tests examples
 
   security:
     runs-on: ubuntu-latest

@@ -25,9 +25,12 @@ class TrainingConfig:
     n_critic: int = 5
     gradient_penalty_weight: float = 10.0
     lr: float = 1e-4
+    generator_lr: Optional[float] = None
+    critic_lr: Optional[float] = None
     betas: tuple[float, float] = (0.0, 0.9)
     grad_clip_norm: float = 1.0
     seed: int = 42
+    deterministic: bool = False
     device: str = "auto"
     num_workers: int = 0
     drop_last: bool = True
@@ -45,12 +48,24 @@ class TrainingConfig:
             raise ValueError("gradient_penalty_weight must be positive.")
         if self.lr <= 0:
             raise ValueError("lr must be positive.")
+        if self.generator_lr is not None and self.generator_lr <= 0:
+            raise ValueError("generator_lr must be positive when provided.")
+        if self.critic_lr is not None and self.critic_lr <= 0:
+            raise ValueError("critic_lr must be positive when provided.")
         if self.grad_clip_norm <= 0:
             raise ValueError("grad_clip_norm must be positive.")
         if self.num_workers < 0:
             raise ValueError("num_workers must be non-negative.")
         if self.log_every <= 0:
             raise ValueError("log_every must be positive.")
+
+    @property
+    def effective_generator_lr(self) -> float:
+        return self.lr if self.generator_lr is None else self.generator_lr
+
+    @property
+    def effective_critic_lr(self) -> float:
+        return self.lr if self.critic_lr is None else self.critic_lr
 
 
 @dataclass
@@ -152,7 +167,7 @@ class WGANTrainer:
     def fit(self, prepared: PreparedData) -> TrainingArtifact:
         """Train on prepared sliding windows and return a generation artifact."""
 
-        set_seed(self.training_config.seed)
+        set_seed(self.training_config.seed, deterministic=self.training_config.deterministic)
         windows = prepared.windows
         if windows.ndim != 3:
             raise ValueError("prepared.windows must have shape (n_windows, sequence_length, n_features).")
@@ -177,16 +192,15 @@ class WGANTrainer:
 
         generator_optimizer = torch.optim.Adam(
             self.model.generator.parameters(),
-            lr=self.training_config.lr,
+            lr=self.training_config.effective_generator_lr,
             betas=self.training_config.betas,
         )
         critic_optimizer = torch.optim.Adam(
             self.model.critic.parameters(),
-            lr=self.training_config.lr,
+            lr=self.training_config.effective_critic_lr,
             betas=self.training_config.betas,
         )
 
-        global_step = 0
         for epoch in range(1, self.training_config.epochs + 1):
             epoch_metrics: dict[str, list[float]] = {
                 "critic_loss": [],
@@ -196,51 +210,64 @@ class WGANTrainer:
                 "real_score": [],
                 "fake_score": [],
             }
+            data_iterator = iter(loader)
+            exhausted = False
+            while not exhausted:
+                critic_steps = 0
+                last_batch_size = 0
+                last_sequence_length = 0
+                last_dtype = next(self.model.generator.parameters()).dtype
 
-            for real_sequences in loader:
-                global_step += 1
-                real_sequences = real_sequences.to(self.device)
-                batch, sequence_length, _ = real_sequences.shape
+                for _ in range(self.training_config.n_critic):
+                    real_sequences = next(data_iterator, None)
+                    if real_sequences is None:
+                        exhausted = True
+                        break
+                    real_sequences = real_sequences.to(self.device)
+                    batch, sequence_length, _ = real_sequences.shape
+                    last_batch_size = batch
+                    last_sequence_length = sequence_length
+                    last_dtype = real_sequences.dtype
 
-                critic_optimizer.zero_grad(set_to_none=True)
-                fake_sequences = self.model.generator.sample(
-                    batch_size=batch,
-                    sequence_length=sequence_length,
-                    device=self.device,
-                    dtype=real_sequences.dtype,
-                )
-                critic_loss, critic_metrics = critic_loss_wgan_gp(
-                    self.model.critic,
-                    real_sequences,
-                    fake_sequences,
-                    gradient_penalty_weight=self.training_config.gradient_penalty_weight,
-                )
-                critic_loss.backward()
-                nn.utils.clip_grad_norm_(self.model.critic.parameters(), self.training_config.grad_clip_norm)
-                critic_optimizer.step()
-
-                _extend_metrics(epoch_metrics, critic_metrics)
-
-                if global_step % self.training_config.n_critic == 0:
-                    generator_optimizer.zero_grad(set_to_none=True)
-                    fake_for_generator = self.model.generator.sample(
+                    critic_optimizer.zero_grad(set_to_none=True)
+                    fake_sequences = self.model.generator.sample(
                         batch_size=batch,
                         sequence_length=sequence_length,
                         device=self.device,
                         dtype=real_sequences.dtype,
                     )
-                    generator_loss, generator_metrics = generator_loss_wgan(self.model.critic, fake_for_generator)
-                    generator_loss.backward()
-                    nn.utils.clip_grad_norm_(self.model.generator.parameters(), self.training_config.grad_clip_norm)
-                    generator_optimizer.step()
-                    _extend_metrics(epoch_metrics, generator_metrics)
+                    critic_loss, critic_metrics = critic_loss_wgan_gp(
+                        self.model.critic,
+                        real_sequences,
+                        fake_sequences,
+                        gradient_penalty_weight=self.training_config.gradient_penalty_weight,
+                    )
+                    critic_loss.backward()
+                    nn.utils.clip_grad_norm_(self.model.critic.parameters(), self.training_config.grad_clip_norm)
+                    critic_optimizer.step()
+                    _extend_metrics(epoch_metrics, critic_metrics)
+                    critic_steps += 1
+
+                if critic_steps == 0:
+                    break
+
+                generator_optimizer.zero_grad(set_to_none=True)
+                fake_for_generator = self.model.generator.sample(
+                    batch_size=last_batch_size,
+                    sequence_length=last_sequence_length,
+                    device=self.device,
+                    dtype=last_dtype,
+                )
+                generator_loss, generator_metrics = generator_loss_wgan(self.model.critic, fake_for_generator)
+                generator_loss.backward()
+                nn.utils.clip_grad_norm_(self.model.generator.parameters(), self.training_config.grad_clip_norm)
+                generator_optimizer.step()
+                _extend_metrics(epoch_metrics, generator_metrics)
 
             averaged = {key: float(np.nanmean(values)) if values else np.nan for key, values in epoch_metrics.items()}
             self.history.append(epoch, averaged)
 
-        feature_columns = list(prepared.scaled_features.columns)
-        if not feature_columns:
-            feature_columns = list(FEATURE_COLUMNS)
+        feature_columns = list(prepared.scaled_features.columns) or list(FEATURE_COLUMNS)
         metadata = dict(getattr(prepared, "metadata", {}) or {})
         start_close: Any = metadata.get("start_close_by_asset")
         start_volume: Any = metadata.get("start_volume_by_asset")
@@ -266,7 +293,6 @@ class WGANTrainer:
 
 def resolve_device(device: str) -> torch.device:
     """Resolve ``auto`` to the best available torch device."""
-
     if device == "auto":
         if torch.cuda.is_available():
             return torch.device("cuda")
@@ -276,23 +302,37 @@ def resolve_device(device: str) -> torch.device:
     return torch.device(device)
 
 
-def set_seed(seed: int) -> None:
+def set_seed(seed: int, deterministic: bool = False) -> None:
     """Seed Python, NumPy, and PyTorch for repeatable experiments."""
-
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
+    if hasattr(torch.backends, "cudnn"):
+        torch.backends.cudnn.deterministic = deterministic
+        torch.backends.cudnn.benchmark = not deterministic
 
 
-def load_checkpoint_dict(path: Union[str, Path], map_location: Union[str, torch.device] = "cpu") -> dict[str, Any]:
-    """Load a SynthMarket checkpoint across PyTorch versions."""
-
+def load_checkpoint_dict(
+    path: Union[str, Path],
+    map_location: Union[str, torch.device] = "cpu",
+    allow_unsafe: bool = True,
+) -> dict[str, Any]:
+    """Load a checkpoint safely first, with an opt-in compatibility fallback."""
     try:
-        return torch.load(path, map_location=map_location, weights_only=False)
+        return torch.load(path, map_location=map_location, weights_only=True)
     except TypeError:
+        if not allow_unsafe:
+            raise
         return torch.load(path, map_location=map_location)
+    except Exception:
+        if not allow_unsafe:
+            raise
+        try:
+            return torch.load(path, map_location=map_location, weights_only=False)
+        except TypeError:
+            return torch.load(path, map_location=map_location)
 
 
 def _extend_metrics(target: dict[str, list[float]], metrics: dict[str, torch.Tensor]) -> None:

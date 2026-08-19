@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use SynthMarket in your research, please cite it as below."
+title: "SynthMarket: Reproducible synthetic financial time-series generation and stress-testing"
+type: software
+authors:
+  - family-names: "Patil"
+    given-names: "Rajvardhan"
+    email: "Rajvardhanpatil7890@gmail.com"
+repository-code: "https://github.com/RajvardhanPatil07/SynthMarket"
+license: MIT
+version: 0.3.0
+date-released: "2026-08-19"
+keywords:
+  - synthetic data
+  - financial time series
+  - generative adversarial networks
+  - WGAN-GP
+  - backtesting
+  - risk analysis
